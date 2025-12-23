@@ -13,6 +13,13 @@
 NocoDB is the fastest and easiest way to build databases online.
 </p>
 
+> **Fork Details**
+>
+> Run with `pnpm start:frontend` & `pnpm start:backend` simultaneously
+>
+> In dev, db is stored in `packages/nocodb/noco.db`
+>
+> `NC_CUSTOM_CONFIG` can be used as storing the JSON custom config. Check [`custom-config.ts`](packages/nc-gui/custom-config.ts)
 
 <p align="center">
     <a href="http://www.nocodb.com"><b>Website</b></a> •
