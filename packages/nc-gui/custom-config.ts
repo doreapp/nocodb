@@ -8,11 +8,11 @@ function loadingEnvironmentBaseConfig() {
 }
 
 export type CustomConfig = Readonly<{
-  ccShowBranding: boolean
+  showBranding: boolean
 }>
 
 const defaultConfig: CustomConfig = {
-  ccShowBranding: false,
+  showBranding: false,
 }
 
 const environmentBaseConfig = loadingEnvironmentBaseConfig()
