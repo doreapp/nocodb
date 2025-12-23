@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { customConfig } from '~/custom-config'
+
 provide(IsMiniSidebarInj, ref(true))
 
 const router = useRouter()
@@ -101,7 +103,7 @@ useEventListener(document, 'keydown', async (e: KeyboardEvent) => {
 <template>
   <div class="nc-mini-sidebar" data-testid="nc-mini-sidebar">
     <div class="flex flex-col items-center">
-      <DashboardMiniSidebarItemWrapper size="small" show-in-mobile>
+      <DashboardMiniSidebarItemWrapper v-if="customConfig.ccShowBranding" size="small" show-in-mobile>
         <div
           class="min-h-9 sticky top-0 bg-[var(--mini-sidebar-bg-color)]"
           :class="{
@@ -113,7 +115,7 @@ useEventListener(document, 'keydown', async (e: KeyboardEvent) => {
         </div>
       </DashboardMiniSidebarItemWrapper>
 
-      <DashboardMiniSidebarItemWrapper show-in-mobile>
+      <DashboardMiniSidebarItemWrapper v-if="customConfig.ccShowBranding" show-in-mobile>
         <NcTooltip placement="right" hide-on-click :arrow="false">
           <template #title>
             <div class="flex gap-1.5">
@@ -134,7 +136,7 @@ useEventListener(document, 'keydown', async (e: KeyboardEvent) => {
           </div>
         </NcTooltip>
       </DashboardMiniSidebarItemWrapper>
-      <div v-if="!isMobileMode" class="px-2 w-full">
+      <div v-if="!isMobileMode && customConfig.ccShowBranding" class="px-2 w-full">
         <NcDivider class="!border-nc-border-gray-dark !my-1" />
       </div>
 
@@ -172,7 +174,7 @@ useEventListener(document, 'keydown', async (e: KeyboardEvent) => {
           </div>
         </NcTooltip>
       </DashboardMiniSidebarItemWrapper>
-      <DashboardMiniSidebarItemWrapper>
+      <DashboardMiniSidebarItemWrapper v-if="customConfig.ccShowBranding">
         <NcTooltip placement="right" hide-on-click :arrow="false">
           <template #title>
             <div class="flex items-center gap-1">{{ $t('labels.searchDocumentation') }} {{ renderCmdOrCtrlKey(true) }} J</div>
@@ -222,7 +224,7 @@ useEventListener(document, 'keydown', async (e: KeyboardEvent) => {
           </div>
         </NcTooltip>
       </DashboardMiniSidebarItemWrapper>
-      <DashboardMiniSidebarItemWrapper v-if="isUIAllowed('workspaceIntegrations')">
+      <DashboardMiniSidebarItemWrapper v-if="isUIAllowed('workspaceIntegrations') && customConfig.ccShowBranding">
         <NcTooltip
           :title="isEeUI ? `${$t('objects.workspace')} ${$t('general.integrations')}` : $t('general.integrations')"
           placement="right"
@@ -261,13 +263,13 @@ useEventListener(document, 'keydown', async (e: KeyboardEvent) => {
         <DashboardMiniSidebarTheme />
       </DashboardMiniSidebarItemWrapper>
 
-      <DashboardMiniSidebarItemWrapper>
+      <DashboardMiniSidebarItemWrapper v-if="customConfig.ccShowBranding">
         <NcTooltip :title="$t('general.help')" placement="right" hide-on-click :arrow="false">
           <DashboardMiniSidebarHelp />
         </NcTooltip>
       </DashboardMiniSidebarItemWrapper>
       <template v-if="!isMobileMode">
-        <DashboardMiniSidebarItemWrapper>
+        <DashboardMiniSidebarItemWrapper v-if="customConfig.ccShowBranding">
           <NcTooltip
             v-if="appInfo.feedEnabled"
             :title="`${$t('title.whatsNew')}!`"
@@ -278,7 +280,7 @@ useEventListener(document, 'keydown', async (e: KeyboardEvent) => {
             <DashboardSidebarFeed />
           </NcTooltip>
         </DashboardMiniSidebarItemWrapper>
-        <DashboardMiniSidebarItemWrapper v-if="isChatWootEnabled">
+        <DashboardMiniSidebarItemWrapper v-if="isChatWootEnabled && customConfig.ccShowBranding">
           <NcTooltip :title="`${$t('labels.chatWithNocoDBSupport')}!`" placement="right" hide-on-click :arrow="false">
             <DashboardSidebarChatSupport />
           </NcTooltip>
