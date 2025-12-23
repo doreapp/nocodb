@@ -2,6 +2,8 @@
 import { validatePassword } from 'nocodb-sdk'
 import type { RuleObject } from 'ant-design-vue/es/form'
 
+import { customConfig } from '~/custom-config'
+
 definePageMeta({
   requiresAuth: false,
 })
@@ -156,7 +158,11 @@ onMounted(async () => {
         <div
           class="bg-white md:mt-[60px] relative flex flex-col justify-center gap-2 w-full max-w-[500px] mx-auto p-8 md:(rounded-lg border-1 border-gray-200 shadow-xl)"
         >
-          <LazyGeneralNocoIcon class="color-transition hover:(ring ring-accent ring-opacity-100)" :animate="isLoading" />
+          <LazyGeneralNocoIcon
+            v-if="customConfig.showBranding"
+            class="color-transition hover:(ring ring-accent ring-opacity-100)"
+            :animate="isLoading"
+          />
 
           <h1 class="prose-2xl font-bold self-center my-4">
             {{ $t('general.signUp') }}
