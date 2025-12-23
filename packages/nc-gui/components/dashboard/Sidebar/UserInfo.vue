@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { customConfig } from '~/custom-config'
+
 const isMiniSidebar = inject(IsMiniSidebarInj, undefined)
 
 const { user, signOut, appInfo } = useGlobal()
@@ -303,7 +305,7 @@ const copyEmail = () => {
       <LazyNotificationMenu v-if="!isMiniSidebar" />
     </div>
 
-    <template v-if="!isMiniSidebar">
+    <template v-if="!isMiniSidebar && customConfig.showBranding">
       <template v-if="isMobileMode || appInfo.ee"></template>
       <div v-else class="flex flex-row w-full justify-between pt-0.5 truncate">
         <GeneralJoinCloud />
