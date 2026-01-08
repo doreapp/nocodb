@@ -116,8 +116,11 @@ jobs:
         if: steps.check-changes.outputs.has_changes == 'true' && steps.merge.outputs.merge_success == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
         run: |
           ${{ steps.gh.outputs.GH }} issue create \
+            --repo $GITHUB_REPOSITORY \
             --title "⚠️ Auto-rebase failed: Conflicts with upstream/master" \
             --body "The automatic rebase from upstream NocoDB (master branch) has failed due to conflicts.
 
@@ -141,5 +144,4 @@ jobs:
           3. Resolve conflicts
           4. Push the changes
 
-          This issue was automatically created by the auto-rebase workflow." \
-            --label "automated,conflict" || echo "Failed to create issue"
+          This issue was automatically created by the auto-rebase workflow." || echo "Failed to create issue"
