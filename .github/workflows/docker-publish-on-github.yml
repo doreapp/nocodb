@@ -36,16 +36,6 @@ jobs:
         with:
           node-version: 22.12.0
 
-      - name: Bootstrap packages
-        run: |
-          pnpm run bootstrap
-
-      - name: Build nocodb and docker files
-        run: |
-          pnpm install --ignore-scripts --no-frozen-lockfile
-          pnpm run docker:build
-        working-directory: ${{ env.working-directory }}
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2.1.0
 
@@ -60,6 +50,9 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
+
+      - name: Prepare docker build
+        run: ./build-local-docker-image.sh
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -78,6 +71,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ${{ env.working-directory }}
+          file: ${{ env.working-directory }}/Dockerfile.local
           build-args: NC_VERSION=${{ steps.meta.outputs.tags }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           cache-from: type=local,src=/tmp/.buildx-cache
