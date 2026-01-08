@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Delete huge unnecessary tools folder
         run: rm -rf /opt/hostedtoolcache
-    
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -83,10 +83,5 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
           push: true
-          labels:
-            ${{ steps.meta.outputs.labels }}
-            # "service=nocodb"
-          tags:
-            ${{ steps.meta.outputs.tags }}
-            # nocodb/${{ steps.get-docker-repository.outputs.DOCKER_REPOSITORY }}:${{ steps.get-docker-repository.outputs.DOCKER_BUILD_TAG }}
-            # nocodb/${{ steps.get-docker-repository.outputs.DOCKER_REPOSITORY }}:${{ steps.get-docker-repository.outputs.DOCKER_BUILD_LATEST_TAG }}
+          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
