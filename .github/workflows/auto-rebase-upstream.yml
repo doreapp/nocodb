@@ -2,7 +2,8 @@ name: "Auto-rebase from NocoDB upstream"
 
 on:
   schedule:
-    - cron: "0 2 * * *"
+    # Once a week, on Monday at 2:00 AM UTC
+    - cron: "0 2 * * 1"
   workflow_dispatch:
 
 jobs:
@@ -141,4 +142,4 @@ jobs:
           4. Push the changes
 
           This issue was automatically created by the auto-rebase workflow." \
-            --label "automated,conflict,upstream-sync" || echo "Failed to create issue"
+            --label "automated,conflict" || echo "Failed to create issue"
