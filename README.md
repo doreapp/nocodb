@@ -20,6 +20,8 @@ NocoDB is the fastest and easiest way to build databases online.
 > In dev, db is stored in `packages/nocodb/noco.db`
 >
 > `NC_CUSTOM_CONFIG` can be used as storing the JSON custom config. Check [`custom-config.ts`](packages/nc-gui/custom-config.ts)
+>
+> Custom docker image is available in GitHub registry [**here**](https://github.com/Doreapp/nocodb/pkgs/container/nocodb).
 
 <p align="center">
     <a href="http://www.nocodb.com"><b>Website</b></a> •
