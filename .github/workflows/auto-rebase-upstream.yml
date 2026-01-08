@@ -1,0 +1,147 @@
+name: "Auto-rebase from NocoDB upstream"
+
+on:
+  schedule:
+    # Once a week, on Monday at 2:00 AM UTC
+    - cron: "0 2 * * 1"
+  workflow_dispatch:
+
+jobs:
+  rebase-upstream:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/nocodb/nocodb.git || git remote set-url upstream https://github.com/nocodb/nocodb.git
+          git fetch upstream master
+
+      - name: Check if there are changes
+        id: check-changes
+        run: |
+          git checkout main
+          COMMITS_AHEAD=$(git rev-list --count main..upstream/master 2>/dev/null || echo "0")
+          if [ "$COMMITS_AHEAD" = "0" ]; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No new commits from upstream"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Found $COMMITS_AHEAD new commit(s) from upstream"
+          fi
+
+      - name: Attempt rebase
+        id: rebase
+        if: steps.check-changes.outputs.has_changes == 'true'
+        run: |
+          git checkout main
+          if git rebase upstream/master; then
+            echo "rebase_success=true" >> $GITHUB_OUTPUT
+            echo "Rebase successful"
+          else
+            echo "rebase_success=false" >> $GITHUB_OUTPUT
+            echo "Rebase failed, aborting..."
+            git rebase --abort || true
+          fi
+
+      - name: Force push after rebase
+        if: steps.rebase.outputs.rebase_success == 'true'
+        run: |
+          git push origin main --force
+
+      - name: Attempt merge
+        id: merge
+        if: steps.check-changes.outputs.has_changes == 'true' && steps.rebase.outputs.rebase_success == 'false'
+        run: |
+          git checkout main
+          git reset --hard origin/main
+          if git merge upstream/master --no-commit --no-ff; then
+            echo "merge_success=true" >> $GITHUB_OUTPUT
+            echo "Merge successful"
+            git commit -m "chore: merge upstream/master into main"
+            echo "Merge commit created successfully"
+          else
+            echo "merge_success=false" >> $GITHUB_OUTPUT
+            echo "Merge failed with conflicts"
+            git merge --abort || true
+          fi
+
+      - name: Force push after merge
+        if: steps.merge.outputs.merge_success == 'true'
+        run: |
+          git push origin main --force
+
+      - name: Prepare GitHub CLI
+        if: steps.check-changes.outputs.has_changes == 'true' && steps.merge.outputs.merge_success == 'false'
+        id: gh
+        run: |
+          if ! command -v gh &> /dev/null; then
+            wget https://github.com/cli/cli/releases/download/v2.33.0/gh_2.33.0_linux_amd64.tar.gz
+            tar -xvf gh_2.33.0_linux_amd64.tar.gz
+            echo "$(pwd)/gh_2.33.0_linux_amd64/bin" >> $GITHUB_PATH
+            GH="$(pwd)/gh_2.33.0_linux_amd64/bin/gh"
+          else
+            GH=gh
+          fi
+          echo "GH=${GH}" >> $GITHUB_OUTPUT
+
+      - name: Get conflict details
+        if: steps.check-changes.outputs.has_changes == 'true' && steps.merge.outputs.merge_success == 'false'
+        id: conflicts
+        run: |
+          git checkout main
+          git reset --hard origin/main
+          git merge upstream/master --no-commit --no-ff 2>&1 || true
+          CONFLICT_FILES=$(git diff --name-only --diff-filter=U 2>/dev/null || echo "Unable to list conflicts")
+          echo "conflict_files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CONFLICT_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          git merge --abort || true
+
+      - name: Create issue for conflicts
+        if: steps.check-changes.outputs.has_changes == 'true' && steps.merge.outputs.merge_success == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+        run: |
+          ${{ steps.gh.outputs.GH }} issue create \
+            --repo $GITHUB_REPOSITORY \
+            --title "⚠️ Auto-rebase failed: Conflicts with upstream/master" \
+            --body "The automatic rebase from upstream NocoDB (master branch) has failed due to conflicts.
+
+          **Details:**
+          - Upstream repository: \`nocodb/nocodb\`
+          - Upstream branch: \`master\`
+          - Local branch: \`main\`
+          - Both rebase and merge attempts failed
+
+          **Conflicting files:**
+          \`\`\`
+          ${{ steps.conflicts.outputs.conflict_files }}
+          \`\`\`
+
+          **Action required:**
+          Please manually resolve the conflicts and update the \`main\` branch.
+
+          **To resolve:**
+          1. Checkout the main branch
+          2. Merge or rebase upstream/master manually
+          3. Resolve conflicts
+          4. Push the changes
+
+          This issue was automatically created by the auto-rebase workflow." || echo "Failed to create issue"
